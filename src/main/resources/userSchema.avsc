@@ -1,0 +1,19 @@
+{
+    "namespace": "mitch-kafka",
+     "type": "record",
+     "name": "user",
+     "fields":[
+         {
+            "name": "first", "type": "string"
+         },
+         {
+            "name": "last",  "type": "string"
+         },
+         {
+            "name": "email", "type": ["string", "null"]
+         },
+         {
+           "name": "dateOfBirth", "type": ["string", "null"]
+         }
+     ]
+}

@@ -1,0 +1,4 @@
+[0m[[0m[0mdebug[0m] [0m[0mCopy resource mappings: [0m
+[0m[[0m[0mdebug[0m] [0m[0m	(/Users/mma0980/git/mitch-kafka/src/main/resources/consumer.conf,/Users/mma0980/git/mitch-kafka/target/scala-2.12/classes/consumer.conf)[0m
+[0m[[0m[0mdebug[0m] [0m[0m	(/Users/mma0980/git/mitch-kafka/src/main/resources/producer.conf,/Users/mma0980/git/mitch-kafka/target/scala-2.12/classes/producer.conf)[0m
+[0m[[0m[0mdebug[0m] [0m[0m	(/Users/mma0980/git/mitch-kafka/src/main/resources/userSchema.avsc,/Users/mma0980/git/mitch-kafka/target/scala-2.12/classes/userSchema.avsc)[0m

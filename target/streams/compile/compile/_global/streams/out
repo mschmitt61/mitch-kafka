@@ -1,0 +1,5 @@
+[0m[[0m[33mwarn[0m] [0m[0m/Users/mma0980/git/mitch-kafka/src/main/scala/UserGenerator.scala:57:104: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: JBool(_), JDecimal(_), JDouble(_), JInt(_), JNothing, JNull, JObject(_), JString(_)[0m
+[0m[[0m[33mwarn[0m] [0m[0m        val messages: List[ProducerRecord[String, Array[Byte]]] = results.extract[JArray].toOption.map({[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                       ^[0m
+[0m[[0m[33mwarn[0m] [0m[0mone warning found[0m
