@@ -1,14 +1,18 @@
+import Producer.getClass
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Parser
+import io.confluent.kafka.serializers.KafkaAvroSerializer
+import org.apache.avro.specific.SpecificRecord
+import org.apache.kafka.clients.producer.ProducerConfig
 
 import java.util.Properties
 import scala.io.Source
 
 object Producer {
 
-  type messagesList = List[ProducerRecord[String, Array[Byte]]]
+  type messagesList = List[ProducerRecord[String, User]]
 
   def main(args: Array[String]): Unit = {
 
@@ -21,13 +25,15 @@ object Producer {
       props.put(conf.getKey, conf.getValue.unwrapped)
     })
 
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[KafkaAvroSerializer])
+
     runProducer(props)
   }
 
   def runProducer(props: Properties): Unit = {
-    val producer = new KafkaProducer[String, Array[Byte]](props)
+    val producer = new KafkaProducer[String, User](props)
 
-    val schema: Schema = new Parser().parse(Source.fromURL(getClass.getResource("/userSchema.avsc")).mkString)
+    val schema: Schema = new Parser().parse(Source.fromURL(getClass.getResource("/src/main/avro/userSchema.avsc")).mkString)
 
     val producerFunc: (messagesList) => Unit = producerFunction(_, producer)
 
@@ -42,7 +48,7 @@ object Producer {
     }
   }
 
-  def producerFunction(messages: messagesList, kafkaProducer: KafkaProducer[String, Array[Byte]]): Unit = {
+  def producerFunction(messages: messagesList, kafkaProducer: KafkaProducer[String, User]): Unit = {
 
     //val record = new ProducerRecord[String, String](topic, key, message)
     //println(s"Partition: ${record.partition()} | Key: ${record.key} | Value: ${record.value}")
@@ -50,9 +56,23 @@ object Producer {
       println(s"Partition: ${message.partition()} | Key: ${message.key} | Value: ${message.value}")
       kafkaProducer.send(message)
     })
+    kafkaProducer.flush()
+    kafkaProducer.close()
     //kafkaProducer.send(messages: _*)//, KafkaProducerOnCompletion()).get()
   }
 
-  case class User(first: String, last: String, email: Option[String], dateOfBirth: Option[String])
+  //case class User(first: String, last: String, email: Option[String], dateOfBirth: Option[String])
+  final case class User(first: String, last: String, email: Option[String], dateOfBirth: Option[String]) extends SpecificRecord {
+    override def put(i: Int, v: Any): Unit = Unit
+
+    override def get(i: Int): AnyRef = ""
+
+    override def getSchema: Schema = new Parser().parse(Source.fromURL(getClass.getResource("/userSchema.avsc")).mkString)
+  }
+
+  object User {
+    val SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
+      Source.fromURL(getClass.getResource("/userSchema.avsc")).mkString)
+  }
 
 }

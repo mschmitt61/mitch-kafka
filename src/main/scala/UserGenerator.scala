@@ -1,4 +1,4 @@
-import Producer.messagesList
+import Producer.{User, messagesList}
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.avro.io.{BinaryEncoder, EncoderFactory}
@@ -54,41 +54,26 @@ object UserGenerator {
 
         val results = parse(body) \ "results"
 
-        val messages: List[ProducerRecord[String, Array[Byte]]] = results.extract[JArray].toOption.map({
+        val messages: List[ProducerRecord[String, User]] = results.extract[JArray].toOption.map({
           case d: JArray => d.arr map { row =>
-            val genericUser: GenericRecord = new GenericData.Record(schema)
-            genericUser.put("first", (row \ "name" \ "first").asInstanceOf[JsonAST.JString].s)
-            genericUser.put("last", (row \ "name" \ "last").asInstanceOf[JsonAST.JString].s)
-            genericUser.put("email", (row \ "email").asInstanceOf[JsonAST.JString].s)
+            val firstName = (row \ "name" \ "first").asInstanceOf[JsonAST.JString].s
+            val lastName = (row \ "name" \ "last").asInstanceOf[JsonAST.JString].s
+            val email = (row \ "email").asInstanceOf[JsonAST.JString].s
             val dob = (row \ "dob" \ "date").asInstanceOf[JsonAST.JString].s
 
             // If an even DOB month, set month to null
             val userDOB = if (dob.split('-')(1).toInt % 2 == 0) null
             else dob
 
-            genericUser.put("dateOfBirth", userDOB)
-            //val message = compact(render(row))
-            val writer = new SpecificDatumWriter[GenericRecord](schema)
-            val out = new ByteArrayOutputStream()
-            val encoder: BinaryEncoder = EncoderFactory.get().binaryEncoder(out, null)
-            writer.write(genericUser, encoder)
-            encoder.flush()
-            out.close()
-
-            val serializedBytes: Array[Byte] = out.toByteArray
-
+            val user = User(firstName,lastName, email, userDOB)
             val companyKey = companyList(Random.nextInt(companyList.length))
 
-            new ProducerRecord[String, Array[Byte]]("USER", companyKey, serializedBytes)
+            new ProducerRecord[String, User]("USER", companyKey, user)
           }
         }).get
 
         producerFunction(messages)
       }
-
     }
-
-    //logger.info(s"Produced $usersToCreate users..")
   }
-
 }

@@ -1,7 +1,7 @@
 {
-    "namespace": "mitch-kafka",
+     "namespace": "mitch.kafka",
      "type": "record",
-     "name": "user",
+     "name": "User",
      "fields":[
          {
             "name": "first", "type": "string"
