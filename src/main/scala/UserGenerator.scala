@@ -1,8 +1,6 @@
-import Producer.{User, messagesList}
+import Producer.messagesList
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericRecord}
-import org.apache.avro.io.{BinaryEncoder, EncoderFactory}
-import org.apache.avro.specific.SpecificDatumWriter
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.conn.ssl.{SSLConnectionSocketFactory, TrustSelfSignedStrategy}
@@ -11,11 +9,10 @@ import org.apache.http.ssl.SSLContexts
 import org.apache.http.util.EntityUtils
 import org.apache.log4j.Logger
 import org.json4s.{DefaultFormats, JArray, JsonAST}
-import org.json4s.native.JsonMethods.{compact, parse, render}
-import kafka.producer.KeyedMessage
+import org.json4s.native.JsonMethods.parse
 import org.apache.kafka.clients.producer.ProducerRecord
 
-import java.io.ByteArrayOutputStream
+import java.util.UUID
 import scala.language.postfixOps
 import scala.util.Random
 
@@ -54,21 +51,29 @@ object UserGenerator {
 
         val results = parse(body) \ "results"
 
-        val messages: List[ProducerRecord[String, User]] = results.extract[JArray].toOption.map({
+        val messages = results.extract[JArray].toOption.map({
           case d: JArray => d.arr map { row =>
+
+
             val firstName = (row \ "name" \ "first").asInstanceOf[JsonAST.JString].s
             val lastName = (row \ "name" \ "last").asInstanceOf[JsonAST.JString].s
             val email = (row \ "email").asInstanceOf[JsonAST.JString].s
             val dob = (row \ "dob" \ "date").asInstanceOf[JsonAST.JString].s
 
             // If an even DOB month, set month to null
-            val userDOB = if (dob.split('-')(1).toInt % 2 == 0) null
+            val userDob = if (dob.split('-')(1).toInt % 2 == 0) null
             else dob
 
-            val user = User(firstName,lastName, email, userDOB)
+            val user = new GenericData.Record(schema)
+            user.put("first", firstName)
+            user.put("last", lastName)
+            user.put("email", email)
+            user.put("dateOfBirth", userDob)
+            user.put("UUID", s"${UUID.randomUUID().toString}")
+
             val companyKey = companyList(Random.nextInt(companyList.length))
 
-            new ProducerRecord[String, User]("USER", companyKey, user)
+            new ProducerRecord[String, GenericRecord]("USER", companyKey, user)
           }
         }).get
 
