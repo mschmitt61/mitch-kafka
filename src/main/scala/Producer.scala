@@ -5,15 +5,25 @@ import org.apache.avro.Schema.Parser
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.avro.generic.GenericRecord
+import org.rogach.scallop._
 
 import java.util.Properties
 import scala.io.Source
+
+class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
+  // user or date
+  val schema = opt[String](required = true)
+  verify()
+}
 
 object Producer {
 
   type messagesList = List[ProducerRecord[String, GenericRecord]]
 
   def main(args: Array[String]): Unit = {
+
+    val conf = new Conf(args)
+    val dataType = conf.schema.getOrElse("")
 
     val config: Config = ConfigFactory.load("producer.conf")
 
@@ -27,13 +37,15 @@ object Producer {
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[KafkaAvroSerializer])
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[KafkaAvroSerializer])
 
-    runProducer(props)
+    val schema: Schema = new Parser().parse(Source.fromURL(getClass.getResource(s"/${dataType}Schema.avsc")).mkString)
+
+    runProducer(props, schema)
   }
 
-  def runProducer(props: Properties): Unit = {
+  def runProducer(props: Properties, schema: Schema): Unit = {
+    // TODO look into avro4s
     val producer = new KafkaProducer[String, GenericRecord](props)
 
-    val schema: Schema = new Parser().parse(Source.fromURL(getClass.getResource("/userSchema.avsc")).mkString)
 
     val producerFunc: (messagesList) => Unit = producerFunction(_, producer)
 
@@ -44,21 +56,16 @@ object Producer {
       // Add a sleep to continually send messages, but kinda slow.
       val sleepTime = props.getProperty("sleepBetweenSendMs").toInt
       Thread.sleep(sleepTime)
-      UserGenerator.produceRandomUserData(producerFunc,schema)
+      DataGenerator.produceRandomUserData(producerFunc, schema)
     }
   }
 
   def producerFunction(messages: messagesList, kafkaProducer: KafkaProducer[String, GenericRecord]): Unit = {
 
-    //val record = new ProducerRecord[String, String](topic, key, message)
-    //println(s"Partition: ${record.partition()} | Key: ${record.key} | Value: ${record.value}")
     messages.foreach(message => {
       println(s"Partition: ${message.partition()} | Key: ${message.key} | Value: ${message.value}")
       kafkaProducer.send(message)
     })
-    //kafkaProducer.send(messages: _*)//, KafkaProducerOnCompletion()).get()
   }
-
-  //case class User(first: String, last: String, email: Option[String], dateOfBirth: Option[String])
 
 }

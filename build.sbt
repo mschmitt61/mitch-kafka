@@ -19,7 +19,8 @@ libraryDependencies ++= Seq(
   "com.github.pureconfig" %% "pureconfig" % "0.13.0",
   "org.apache.avro" % "avro" % "1.7.7",
   "org.apache.kafka" % "kafka_2.11" % "0.10.0.0",
-  "io.confluent" % "kafka-avro-serializer" % "6.0.0"
+  "io.confluent" % "kafka-avro-serializer" % "6.0.0",
+  "org.rogach" %% "scallop" % "4.0.3"
 )
 
 mainClass / run := Some("Producer")

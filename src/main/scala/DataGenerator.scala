@@ -16,7 +16,7 @@ import java.util.UUID
 import scala.language.postfixOps
 import scala.util.Random
 
-object UserGenerator {
+object DataGenerator {
 
   val logger: Logger = Logger.getLogger(this.getClass.getName.stripSuffix("$"))
 
@@ -81,4 +81,50 @@ object UserGenerator {
       }
     }
   }
+
+  def generateKafkaMessage(topic: String, rawData: JsonAST.JValue, schema: Schema): GenericData.Record = {
+    topic match {
+      case "user" => generateUser(rawData, schema)
+      case "calendar" => generateDate(rawData, schema)
+    }
+  }
+
+  def generateUser(rawData: JsonAST.JValue, schema: Schema): GenericData.Record = {
+
+    val firstName = (rawData \ "name" \ "first").asInstanceOf[JsonAST.JString].s
+    val lastName = (rawData \ "name" \ "last").asInstanceOf[JsonAST.JString].s
+    val email = (rawData \ "email").asInstanceOf[JsonAST.JString].s
+    val dob = (rawData \ "dob" \ "date").asInstanceOf[JsonAST.JString].s
+
+    // If an even DOB month, set month to null
+    val userDob = if (dob.split('-')(1).toInt % 2 == 0) null
+    else dob
+
+    val user = new GenericData.Record(schema)
+    user.put("first", firstName)
+    user.put("last", lastName)
+    user.put("email", email)
+    user.put("dateOfBirth", userDob)
+    user.put("UUID", s"${UUID.randomUUID().toString}")
+
+    user
+  }
+
+  def generateDate(rawData: JsonAST.JValue, schema: Schema): GenericData.Record = {
+
+    val dob = (rawData \ "dob" \ "date").asInstanceOf[JsonAST.JString].s
+
+    val split = (dob.split('-'))
+    val year = split(0)
+    val month = split(1)
+    val day = split(2)
+
+    val date = new GenericData.Record(schema)
+    date.put("year", year)
+    date.put("month", month)
+    date.put("day", day)
+
+    date
+  }
+
 }

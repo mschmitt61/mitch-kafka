@@ -1,0 +1,16 @@
+{
+  "namespace": "mitch.kafka",
+  "type": "record",
+  "name": "Date",
+  "fields":[
+    {
+      "name": "year", "type": "int"
+    },
+    {
+      "name": "month",  "type": "int"
+    },
+    {
+      "name": "day", "type": "int"
+    }
+  ]
+}

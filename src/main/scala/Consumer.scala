@@ -42,9 +42,6 @@ object Consumer {
       println("Consumer started, awaiting records...")
       val records: ConsumerRecords[String, String] = consumer.poll(pollMs)
 
-      //val count = records.count()
-      //logger.info(s"new batch count: $count")
-
       records.iterator.forEachRemaining { r =>
         println(s" Partition: ${r.partition()} | Off: ${r.offset} | Key: ${r.key} | Value: ${r.value}")
       }
